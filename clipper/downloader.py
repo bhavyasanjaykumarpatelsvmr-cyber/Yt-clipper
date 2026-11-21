@@ -18,7 +18,11 @@ def download_video(url: str, cache_dir: str = "cache") -> dict:
     cache_path = Path(cache_dir)
     cache_path.mkdir(parents=True, exist_ok=True)
 
-    with yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True}) as ydl:
+    base_opts = {"quiet": True, "no_warnings": True}
+    if Path("cookies.txt").exists():
+        base_opts["cookiefile"] = "cookies.txt"
+
+    with yt_dlp.YoutubeDL(base_opts) as ydl:
         info = ydl.extract_info(url, download=False)
 
     duration = info.get("duration")
@@ -34,11 +38,10 @@ def download_video(url: str, cache_dir: str = "cache") -> dict:
     out_template = str(cache_path / f"{video_id}.%(ext)s")
 
     ydl_opts = {
+        **base_opts,
         "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
         "outtmpl": out_template,
         "merge_output_format": "mp4",
-        "quiet": True,
-        "no_warnings": True,
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
