@@ -30,6 +30,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -47,8 +49,13 @@ jobs:
       - name: Run AI YouTube Shorts Clipper
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          YOUTUBE_COOKIES: ${{ secrets.YOUTUBE_COOKIES }}
         run: |
+          if [ -n "$YOUTUBE_COOKIES" ]; then
+            printf "%s\n" "$YOUTUBE_COOKIES" > cookies.txt
+          fi
           python main.py "${{ inputs.url }}" --clips "${{ inputs.clips }}" --mode "${{ inputs.mode }}"
+          rm -f cookies.txt
 
       - name: Build HTML page with direct links
         run: |
@@ -116,3 +123,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
